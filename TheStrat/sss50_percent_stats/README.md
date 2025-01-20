@@ -1,96 +1,207 @@
-# SSS50 Percent Rule Analysis
 
-This script analyzes SSS50 retrace patterns in futures market data, specifically focusing on two key patterns:
 
-- **2U Pattern**: When a candle makes a higher high than the previous candle
-- **2D Pattern**: When a candle makes a lower low than the previous candle
-
-## Methodology
-
-The analysis considers a pattern successful if:
-
-- For 2U: Price reaches the previous candle's low
-- For 2D: Price reaches the previous candle's high
-
-Success is measured across three timeframes:
-
-1. Within the same candle
-2. Within the next 2 candles
-3. Within the next 3 candles
-
-Only patterns with 50%+ retracement are included in the analysis to ensure statistical relevance.
-
-## Features
-
-- Analyzes multiple timeframes (15min, 30min, 60min, 4H, 12H)
-- Handles gap scenarios in market data
-- Calculates success rates for different follow-through periods:
-  - Same candle
-  - Within 2 candles
-  - Within 3 candles
-- Supports multiple instruments (MES, MNQ)
-- Accounts for data quality issues:
-  - Zero-range candles
-  - Holiday period gaps
-  - Division by zero scenarios
-
-## Output Format
-
-The script generates three types of output:
-
-1. **Comparative Analysis Tables**: Shows detailed statistics for each pattern, including:
-
-   - Total pattern occurrences
-   - Gap percentages
-   - Success rates at different timeframes
-   - Cumulative success rates
-
-2. **CSV Export**: Creates a comprehensive CSV file containing all analysis results
-
-```
 === Analysis for 12H Timeframe ===
-┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐
-│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │
-├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤
-│ MNQ  │ 12H │ 2U │   512 │     0    0.0% │   269   52.5% │    80   15.6% │    18    3.5% │   145   28.3% │    349   68.2% │    367   71.7% │
-│ MNQ  │ 12H │ 2D │   195 │     0    0.0% │     1    0.5% │    64   32.8% │    16    8.2% │   114   58.5% │     65   33.3% │     81   41.5% │
-│ MES  │ 12H │ 2U │   526 │     0    0.0% │   266   50.6% │    86   16.3% │    12    2.3% │   162   30.8% │    352   66.9% │    364   69.2% │
-│ MES  │ 12H │ 2D │   211 │     0    0.0% │     4    1.9% │    67   31.8% │    17    8.1% │   123   58.3% │     71   33.6% │     88   41.7% │
-└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+
+
 === Analysis for 4H Timeframe ===
-┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐
-│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │
-├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤
-│ MNQ  │ 4H │ 2U │  1445 │     0    0.0% │   501   34.7% │   328   22.7% │    82    5.7% │   534   37.0% │    829   57.4% │    911   63.0% │
-│ MNQ  │ 4H │ 2D │   806 │     0    0.0% │     6    0.7% │   316   39.2% │    70    8.7% │   414   51.4% │    322   40.0% │    392   48.6% │
-│ MES  │ 4H │ 2U │  1469 │     0    0.0% │   508   34.6% │   345   23.5% │    74    5.0% │   542   36.9% │    853   58.1% │    927   63.1% │
-│ MES  │ 4H │ 2D │   849 │     0    0.0% │    20    2.4% │   322   37.9% │    59    6.9% │   448   52.8% │    342   40.3% │    401   47.2% │
-└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+
+
 === Analysis for 60min Timeframe ===
-┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐
-│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │
-├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤
-│ MNQ  │ 60min │ 2U │  5630 │     0    0.0% │  1586   28.2% │  1148   20.4% │   327    5.8% │  2569   45.6% │   2734   48.6% │   3061   54.4% │
-│ MNQ  │ 60min │ 2D │  3593 │     0    0.0% │    36    1.0% │  1121   31.2% │   295    8.2% │  2141   59.6% │   1157   32.2% │   1452   40.4% │
-│ MES  │ 60min │ 2U │  5647 │     0    0.0% │  1651   29.2% │  1166   20.6% │   305    5.4% │  2525   44.7% │   2817   49.9% │   3122   55.3% │
-│ MES  │ 60min │ 2D │  3669 │     0    0.0% │   167    4.6% │  1098   29.9% │   297    8.1% │  2107   57.4% │   1265   34.5% │   1562   42.6% │
-└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+
+
 === Analysis for 30min Timeframe ===
-┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐
-│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │
-├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤
-│ MNQ  │ 30min │ 2U │ 10841 │     0    0.0% │  2747   25.3% │  2289   21.1% │   631    5.8% │  5174   47.7% │   5036   46.5% │   5667   52.3% │
-│ MNQ  │ 30min │ 2D │  7475 │     0    0.0% │    79    1.1% │  2295   30.7% │   603    8.1% │  4498   60.2% │   2374   31.8% │   2977   39.8% │
-│ MES  │ 30min │ 2U │ 10734 │     0    0.0% │  2911   27.1% │  2274   21.2% │   597    5.6% │  4952   46.1% │   5185   48.3% │   5782   53.9% │
-│ MES  │ 30min │ 2D │  7589 │     0    0.0% │   510    6.7% │  2170   28.6% │   589    7.8% │  4320   56.9% │   2680   35.3% │   3269   43.1% │
-└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+
+
 === Analysis for 15min Timeframe ===
-┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐
-│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │
-├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤
-│ MNQ  │ 15min │ 2U │ 21397 │     0    0.0% │  4983   23.3% │  4777   22.3% │  1271    5.9% │ 10366   48.4% │   9760   45.6% │  11031   51.6% │
-│ MNQ  │ 15min │ 2D │ 15502 │     0    0.0% │   303    2.0% │  4587   29.6% │  1219    7.9% │  9393   60.6% │   4890   31.5% │   6109   39.4% │
-│ MES  │ 15min │ 2U │ 20706 │     0    0.0% │  5391   26.0% │  4422   21.4% │  1193    5.8% │  9700   46.8% │   9813   47.4% │  11006   53.2% │
-│ MES  │ 15min │ 2D │ 15575 │     0    0.0% │  1373    8.8% │  4388   28.2% │  1173    7.5% │  8641   55.5% │   5761   37.0% │   6934   44.5% │
-└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘
-```
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+Error in prepare_data: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+Traceback (most recent call last):
+  File "/Users/spencerduran/Code_Repos/quant-futures-analytics-py/TheStrat/sss50_percent_stats/sss50_percent_stats.py", line 15, in prepare_data
+    self.df = pd.read_csv(filepath)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1026, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 626, in _read
+    return parser.read(nrows)
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1923, in read
+    ) = self._engine.read(  # type: ignore[attr-defined]
+  File "/Users/spencerduran/.pyenv/versions/3.10.8/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 234, in read
+    chunks = self._reader.read_low_memory(nrows)
+  File "parsers.pyx", line 838, in pandas._libs.parsers.TextReader.read_low_memory
+  File "parsers.pyx", line 905, in pandas._libs.parsers.TextReader._read_rows
+  File "parsers.pyx", line 874, in pandas._libs.parsers.TextReader._tokenize_rows
+  File "parsers.pyx", line 891, in pandas._libs.parsers.TextReader._check_tokenize_status
+  File "parsers.pyx", line 2061, in pandas._libs.parsers.raise_parser_error
+pandas.errors.ParserError: Error tokenizing data. C error: Calling read(nbytes) on source failed. Try engine='python'.
+
+
+Results saved to retracement_analysis_results.csv

@@ -41,33 +41,32 @@ class RetracementFollowAnalyzer:
             return False
 
     def analyze_follow_through(self) -> dict:
-        """Analyze what happens after 50% retracements, including gap scenarios"""
+        """Analyze full moves to previous candle's opposite extreme when 50%+ retraced"""
         results = {
             "higher_high_retrace": {
                 "total_patterns": 0,
-                "gap_patterns": 0,  # Track patterns from gaps
+                "gap_patterns": 0,
                 "reached_target": {
                     "same_candle": 0,
                     "within_2": 0,
                     "within_3": 0,
                     "never": 0,
                 },
-                "timestamps": [],  # For debugging
+                "timestamps": [],
             },
             "lower_low_retrace": {
                 "total_patterns": 0,
-                "gap_patterns": 0,  # Track patterns from gaps
+                "gap_patterns": 0,
                 "reached_target": {
                     "same_candle": 0,
                     "within_2": 0,
                     "within_3": 0,
                     "never": 0,
                 },
-                "timestamps": [],  # For debugging
+                "timestamps": [],
             },
         }
 
-        # We need to look ahead up to 3 candles, so stop 3 candles before the end
         for i in range(1, len(self.df) - 3):
             curr_candle = self.df.iloc[i]
             prev_candle = self.df.iloc[i - 1]
@@ -78,20 +77,28 @@ class RetracementFollowAnalyzer:
 
             # Higher High Pattern (2U)
             is_2u = False
-            # Check for regular higher high
+            gap_retrace = False
+
+            # Check for regular higher high or gap up
             if curr_candle["high"] > prev_candle["high"]:
                 is_2u = True
-            # Check for gap up above previous high
             elif curr_candle["open"] > prev_candle["high"]:
-                is_2u = True
-                results["higher_high_retrace"]["gap_patterns"] += 1
+                # If gap up and open is already 50% retraced from prev high to prev low
+                open_retrace = (
+                    (prev_candle["high"] - curr_candle["open"]) / prev_range * 100
+                )
+                if open_retrace >= 50:
+                    is_2u = True
+                    gap_retrace = True
+                    results["higher_high_retrace"]["gap_patterns"] += 1
 
             if is_2u:
-                # Calculate retracement
-                retrace = curr_candle["high"] - curr_candle["low"]
+                retrace = prev_candle["high"] - curr_candle["low"]
                 retrace_pct = (retrace / prev_range) * 100
 
-                if retrace_pct >= 50:  # Only analyze candles with 50%+ retrace
+                if (
+                    retrace_pct >= 50 or gap_retrace
+                ):  # Include if 50%+ retrace or gap already retraced
                     results["higher_high_retrace"]["total_patterns"] += 1
                     results["higher_high_retrace"]["timestamps"].append(
                         curr_candle["timestamp"]
@@ -123,20 +130,29 @@ class RetracementFollowAnalyzer:
 
             # Lower Low Pattern (2D)
             is_2d = False
-            # Check for regular lower low
+            gap_retrace = False
+
+            # Check for regular lower low or gap down
             if curr_candle["low"] < prev_candle["low"]:
                 is_2d = True
-            # Check for gap down below previous low
             elif curr_candle["open"] < prev_candle["low"]:
-                is_2d = True
-                results["lower_low_retrace"]["gap_patterns"] += 1
+                # If gap down and open is already 50% retraced from prev low to prev high
+                open_retrace = (
+                    (curr_candle["open"] - prev_candle["low"]) / prev_range * 100
+                )
+                if open_retrace >= 50:
+                    is_2d = True
+                    gap_retrace = True
+                    results["lower_low_retrace"]["gap_patterns"] += 1
 
             if is_2d:
-                # Calculate retracement from the low
-                retrace = curr_candle["high"] - curr_candle["low"]
+                # For 2D: measure from previous low
+                retrace = curr_candle["high"] - prev_candle["low"]
                 retrace_pct = (retrace / prev_range) * 100
 
-                if retrace_pct >= 50:  # Only analyze candles with 50%+ retrace
+                if (
+                    retrace_pct >= 50 or gap_retrace
+                ):  # Include if 50%+ retrace or gap already retraced
                     results["lower_low_retrace"]["total_patterns"] += 1
                     results["lower_low_retrace"]["timestamps"].append(
                         curr_candle["timestamp"]
