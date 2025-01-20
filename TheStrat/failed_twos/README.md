@@ -48,3 +48,66 @@ For statistical relevance, the analysis excludes:
 - Zero-range candles
 - Invalid price data
 - Moves that don't exceed the open price
+
+```
+MNQ Data Summary:
+Records: 695,408
+Date Range: 2022-12-18 06:01:00 to 2024-12-13 22:00:00
+Resampled to 1,144 12h candles
+Zero range candles: 42
+
+=== MNQ Pattern Analysis ===
+
+Pattern                   Total Count     Retrace %
+--------------------------------------------------
+Higher High Retracements  597
+                          ≥25%              94.1%
+                          ≥50%              81.9%
+                          ≥75%              71.4%
+                          ≥100%             45.1%
+                          ≥125%             27.5%
+                          ≥150%             19.3%
+                          ≥175%             12.6%
+                          ≥200%              8.2%
+
+Lower Low Retracements    503
+                          ≥25%              98.6%
+                          ≥50%              88.5%
+                          ≥75%              78.7%
+                          ≥100%             53.5%
+                          ≥125%             31.0%
+                          ≥150%             18.9%
+                          ≥175%             13.1%
+                          ≥200%              8.3%
+
+
+MES Data Summary:
+Records: 708,409
+Date Range: 2022-12-14 05:01:00 to 2024-12-16 05:00:00
+Resampled to 1,160 12h candles
+Zero range candles: 40
+
+=== MES Pattern Analysis ===
+
+Pattern                   Total Count     Retrace %
+--------------------------------------------------
+Higher High Retracements  600
+                          ≥25%              95.5%
+                          ≥50%              83.8%
+                          ≥75%              70.0%
+                          ≥100%             44.3%
+                          ≥125%             27.2%
+                          ≥150%             17.5%
+                          ≥175%             11.8%
+                          ≥200%              7.8%
+
+Lower Low Retracements    510
+                          ≥25%              98.6%
+                          ≥50%              89.2%
+                          ≥75%              77.3%
+                          ≥100%             51.8%
+                          ≥125%             29.8%
+                          ≥150%             19.0%
+                          ≥175%             13.3%
+                          ≥200%              9.0%
+```

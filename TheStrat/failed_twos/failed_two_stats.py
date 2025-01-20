@@ -9,13 +9,12 @@ class PatternAnalyzer:
         """Initialize with optional DataFrame"""
         self.df = df
         self.pct_tiers = range(25, 225, 25)
+        self.instrument_name = None
 
     def validate_data(self) -> bool:
         """Validate the data before processing"""
         if self.df is None:
             return False
-
-        print(f"\nColumns in dataframe: {self.df.columns.tolist()}")
 
         required_columns = ["timestamp", "open", "high", "low", "close", "volume"]
         missing_columns = [
@@ -49,14 +48,15 @@ class PatternAnalyzer:
 
         return True
 
-    def prepare_data(self, filepath: str) -> bool:
+    def prepare_data(self, filepath: str, instrument_name: str) -> bool:
         """Read and prepare the data from combined CSV file"""
         try:
+            self.instrument_name = instrument_name
             # Read the CSV file
             self.df = pd.read_csv(filepath)
             self.df["timestamp"] = pd.to_datetime(self.df["timestamp"])
 
-            print(f"\nData Summary before resampling:")
+            print(f"\n{instrument_name} Data Summary:")
             print(f"Records: {len(self.df):,}")
             print(
                 f"Date Range: {self.df['timestamp'].min()} to {self.df['timestamp'].max()}"
@@ -84,47 +84,25 @@ class PatternAnalyzer:
             self.df["candle_range"] = self.df["high"] - self.df["low"]
             zero_range_12h = self.df[self.df["candle_range"] == 0]
 
-            print(f"\nResampled Data Analysis:")
-            print(f"Records: {len(self.df):,}")
-            print(
-                f"Date Range: {self.df['timestamp'].min()} to {self.df['timestamp'].max()}"
-            )
-            print(f"Zero range 12h candles: {len(zero_range_12h)}")
-
-            if len(zero_range_12h) > 0:
-                print("\nZero range 12h candles:")
-                print(
-                    zero_range_12h[
-                        ["timestamp", "open", "high", "low", "close", "volume"]
-                    ].head()
-                )
+            print(f"Resampled to {len(self.df):,} 12h candles")
+            print(f"Zero range candles: {len(zero_range_12h)}")
 
             return True
 
         except Exception as e:
             print(f"Error in prepare_data: {str(e)}")
-            print("Detailed error information:")
-            import traceback
-
-            print(traceback.format_exc())
             return False
 
     def analyze_patterns(self) -> dict:
-        """Analyze '3' patterns and their moves past the open"""
+        """Analyze retracements after making higher highs/lower lows"""
         results = {
             "high_then_below_open": {
                 "count": 0,
-                "moves": [],
-                "move_percentages": [],
                 "tier_hits": {pct: 0 for pct in self.pct_tiers},
-                "skipped_zero_range": 0,
             },
             "low_then_above_open": {
                 "count": 0,
-                "moves": [],
-                "move_percentages": [],
                 "tier_hits": {pct: 0 for pct in self.pct_tiers},
-                "skipped_zero_range": 0,
             },
         }
 
@@ -133,44 +111,36 @@ class PatternAnalyzer:
             prev_candle = self.df.iloc[i - 1]
 
             # Skip if previous candle had zero range
-            prev_candle_size = prev_candle["high"] - prev_candle["low"]
-            if prev_candle_size == 0:
+            prev_range = prev_candle["high"] - prev_candle["low"]
+            if prev_range == 0:
                 continue
 
-            # Made higher high and went below open
+            # Made higher high then retraced
             if curr_candle["high"] > prev_candle["high"]:
-                # Target would be previous low after making higher high
-                target_distance = curr_candle["open"] - prev_candle["low"]
-                points_below_open = curr_candle["open"] - curr_candle["low"]
+                curr_low = curr_candle["low"]
+                possible_retrace = curr_candle["high"] - prev_candle["low"]
+                actual_retrace = curr_candle["high"] - curr_low
 
-                if (
-                    points_below_open > 0 and target_distance > 0
-                ):  # Only if it went below open and target is valid
-                    move_pct = (points_below_open / target_distance) * 100
+                if possible_retrace > 0:
+                    retrace_pct = (actual_retrace / possible_retrace) * 100
                     results["high_then_below_open"]["count"] += 1
-                    results["high_then_below_open"]["moves"].append(points_below_open)
-                    results["high_then_below_open"]["move_percentages"].append(move_pct)
 
                     for pct in self.pct_tiers:
-                        if move_pct >= pct:
+                        if retrace_pct >= pct:
                             results["high_then_below_open"]["tier_hits"][pct] += 1
 
-            # Made lower low and went above open
+            # Made lower low then retraced
             if curr_candle["low"] < prev_candle["low"]:
-                # Target would be previous high after making lower low
-                target_distance = prev_candle["high"] - curr_candle["open"]
-                points_above_open = curr_candle["high"] - curr_candle["open"]
+                curr_high = curr_candle["high"]
+                possible_retrace = prev_candle["high"] - curr_candle["low"]
+                actual_retrace = curr_high - curr_candle["low"]
 
-                if (
-                    points_above_open > 0 and target_distance > 0
-                ):  # Only if it went above open and target is valid
-                    move_pct = (points_above_open / target_distance) * 100
+                if possible_retrace > 0:
+                    retrace_pct = (actual_retrace / possible_retrace) * 100
                     results["low_then_above_open"]["count"] += 1
-                    results["low_then_above_open"]["moves"].append(points_above_open)
-                    results["low_then_above_open"]["move_percentages"].append(move_pct)
 
                     for pct in self.pct_tiers:
-                        if move_pct >= pct:
+                        if retrace_pct >= pct:
                             results["low_then_above_open"]["tier_hits"][pct] += 1
 
         return results
@@ -178,61 +148,55 @@ class PatternAnalyzer:
     def print_pattern_analysis(self, results: dict):
         """Print pattern analysis results"""
         patterns = {
-            "high_then_below_open": "Made Higher High then moved below open",
-            "low_then_above_open": "Made Lower Low then moved above open",
+            "high_then_below_open": "Higher High Retracements",
+            "low_then_above_open": "Lower Low Retracements",
         }
 
-        print("\n=== Pattern Analysis Results ===")
+        print(f"\n=== {self.instrument_name} Pattern Analysis ===")
+
+        # Header
+        print("\n{:<25} {:<15} {:<10}".format("Pattern", "Total Count", "Retrace %"))
+        print("-" * 50)
+
         for pattern, data in results.items():
-            print(f"\n{patterns[pattern]}:")
-            print(f"Total occurrences: {data['count']}")
+            pattern_name = patterns[pattern]
+            total_count = data["count"]
 
-            if data["count"] > 0:
-                moves = data["moves"]
-                move_pcts = data["move_percentages"]
+            # Print first line with pattern name and total count
+            print("{:<25} {:<15}".format(pattern_name, total_count))
 
-                print(f"\nAbsolute Move Statistics:")
-                print(f"Average move past open: {np.mean(moves):.2f} points")
-                print(f"Median move past open: {np.median(moves):.2f} points")
-                print(f"Max move past open: {np.max(moves):.2f} points")
-                print(f"Min move past open: {np.min(moves):.2f} points")
-
-                print(f"\nMove as Percentage of Previous Candle Size:")
-                print(f"Average: {np.mean(move_pcts):.2f}%")
-                print(f"Median: {np.median(move_pcts):.2f}%")
-                print(f"Max: {np.max(move_pcts):.2f}%")
-                print(f"Min: {np.min(move_pcts):.2f}%")
-
-                print(f"\nPercentage Tier Statistics:")
-                print("(How often the move exceeded each % of previous candle size)")
-                print("-" * 60)
-                for pct, count in data["tier_hits"].items():
-                    success_rate = (count / data["count"]) * 100
-                    print(
-                        f"{pct:3d}% : {count:3d} times ({success_rate:6.2f}% of occurrences)"
-                    )
+            # Print percentage tiers
+            for pct in self.pct_tiers:
+                count = data["tier_hits"][pct]
+                success_rate = (count / total_count * 100) if total_count > 0 else 0
+                print("{:<25} {:<15} {:>6.1f}%".format("", f"≥{pct}%", success_rate))
+            print("")
 
 
 def main():
-    filepath = "../../data/MNQ/continuous_MNQ_volume_rolled.csv"
+    filepaths = {
+        "MNQ": "../../data/MNQ/continuous_MNQ_volume_rolled.csv",
+        "MES": "../../data/MES/continuous_MES_volume_rolled.csv",
+    }
 
-    # Initialize analyzer
-    analyzer = PatternAnalyzer()
+    for instrument, filepath in filepaths.items():
+        # Initialize analyzer
+        analyzer = PatternAnalyzer()
 
-    # Prepare and validate data
-    if not analyzer.prepare_data(filepath):
-        print("Failed to prepare data")
-        return
+        # Prepare and validate data
+        if not analyzer.prepare_data(filepath, instrument):
+            print(f"Failed to prepare data for {instrument}")
+            continue
 
-    if not analyzer.validate_data():
-        print("Data validation failed")
-        return
+        if not analyzer.validate_data():
+            print(f"Data validation failed for {instrument}")
+            continue
 
-    # Analyze patterns
-    results = analyzer.analyze_patterns()
+        # Analyze patterns
+        results = analyzer.analyze_patterns()
 
-    # Print results
-    analyzer.print_pattern_analysis(results)
+        # Print results
+        analyzer.print_pattern_analysis(results)
 
 
 if __name__ == "__main__":
