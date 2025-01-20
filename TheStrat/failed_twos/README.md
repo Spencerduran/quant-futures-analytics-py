@@ -84,15 +84,8 @@ This script analyzes the magnitude of price moves after a 2 fails and begins to 
 
 The analysis generates detailed statistics for each pattern type:
 
-1. **Absolute Move Metrics**:
-
-   - Average move
-   - Median move
-   - Maximum move
-   - Minimum move
-
-2. **Percentage-Based Analysis**:
-   - Move sizes as percentage of previous candle range
+1. **Percentage-Based Analysis**:
+   - Move sizes as percentage of remainint previous candle retracement range
    - Success rates at different percentage tiers
    - Distribution of move magnitudes
 
