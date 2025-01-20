@@ -9,15 +9,15 @@ class RetracementFollowAnalyzer:
     def __init__(self, df=None):
         self.df = df
 
-    def prepare_data(self, filepath: str) -> bool:
+    def prepare_data(self, filepath: str, timeframe: str = "12h") -> bool:
         """Read and prepare the data"""
         try:
             self.df = pd.read_csv(filepath)
             self.df["timestamp"] = pd.to_datetime(self.df["timestamp"])
 
-            # Resample to 12-hour candles
+            # Resample to specified timeframe
             resampled = (
-                self.df.resample("12h", on="timestamp")
+                self.df.resample(timeframe, on="timestamp")
                 .agg(
                     {
                         "open": "first",
@@ -41,10 +41,11 @@ class RetracementFollowAnalyzer:
             return False
 
     def analyze_follow_through(self) -> dict:
-        """Analyze what happens after 50% retracements"""
+        """Analyze what happens after 50% retracements, including gap scenarios"""
         results = {
             "higher_high_retrace": {
                 "total_patterns": 0,
+                "gap_patterns": 0,  # Track patterns from gaps
                 "reached_target": {
                     "same_candle": 0,
                     "within_2": 0,
@@ -55,6 +56,7 @@ class RetracementFollowAnalyzer:
             },
             "lower_low_retrace": {
                 "total_patterns": 0,
+                "gap_patterns": 0,  # Track patterns from gaps
                 "reached_target": {
                     "same_candle": 0,
                     "within_2": 0,
@@ -74,8 +76,17 @@ class RetracementFollowAnalyzer:
             if prev_range == 0:  # Skip zero-range previous candles
                 continue
 
-            # Higher High Pattern with 50% retrace
+            # Higher High Pattern (2U)
+            is_2u = False
+            # Check for regular higher high
             if curr_candle["high"] > prev_candle["high"]:
+                is_2u = True
+            # Check for gap up above previous high
+            elif curr_candle["open"] > prev_candle["high"]:
+                is_2u = True
+                results["higher_high_retrace"]["gap_patterns"] += 1
+
+            if is_2u:
                 # Calculate retracement
                 retrace = curr_candle["high"] - curr_candle["low"]
                 retrace_pct = (retrace / prev_range) * 100
@@ -110,8 +121,17 @@ class RetracementFollowAnalyzer:
                     else:
                         results["higher_high_retrace"]["reached_target"]["never"] += 1
 
-            # Lower Low Pattern with 50% retrace
+            # Lower Low Pattern (2D)
+            is_2d = False
+            # Check for regular lower low
             if curr_candle["low"] < prev_candle["low"]:
+                is_2d = True
+            # Check for gap down below previous low
+            elif curr_candle["open"] < prev_candle["low"]:
+                is_2d = True
+                results["lower_low_retrace"]["gap_patterns"] += 1
+
+            if is_2d:
                 # Calculate retracement from the low
                 retrace = curr_candle["high"] - curr_candle["low"]
                 retrace_pct = (retrace / prev_range) * 100
@@ -144,35 +164,48 @@ class RetracementFollowAnalyzer:
 
         return results
 
-    def print_analysis(self, results: dict, instrument: str):
-        """Store results for comparative table"""
-        # Convert results into row format for later tabulation
+    def print_analysis(self, results: dict, instrument: str, timeframe: str):
+        """Store results for comparative table, including gap statistics"""
         data = []
         for pattern_type in ["higher_high_retrace", "lower_low_retrace"]:
             pattern_data = results[pattern_type]
             targets = pattern_data["reached_target"]
             total = pattern_data["total_patterns"]
+            gaps = pattern_data["gap_patterns"]
 
             if total > 0:
                 data.append(
                     {
+                        "timeframe": timeframe,
                         "instrument": instrument,
                         "pattern": "2U"
                         if pattern_type == "higher_high_retrace"
                         else "2D",
                         "total": total,
+                        "gaps": gaps,
+                        "gaps_pct": (gaps / total * 100) if total > 0 else 0,
                         "same_count": targets["same_candle"],
-                        "same_pct": (targets["same_candle"] / total * 100),
+                        "same_pct": (targets["same_candle"] / total * 100)
+                        if total > 0
+                        else 0,
                         "two_count": targets["within_2"],
-                        "two_pct": (targets["within_2"] / total * 100),
+                        "two_pct": (targets["within_2"] / total * 100)
+                        if total > 0
+                        else 0,
                         "three_count": targets["within_3"],
-                        "three_pct": (targets["within_3"] / total * 100),
+                        "three_pct": (targets["within_3"] / total * 100)
+                        if total > 0
+                        else 0,
                         "never_count": targets["never"],
-                        "never_pct": (targets["never"] / total * 100),
+                        "never_pct": (targets["never"] / total * 100)
+                        if total > 0
+                        else 0,
                         "cum_two_count": targets["same_candle"] + targets["within_2"],
                         "cum_two_pct": (
                             (targets["same_candle"] + targets["within_2"]) / total * 100
-                        ),
+                        )
+                        if total > 0
+                        else 0,
                         "cum_three_count": targets["same_candle"]
                         + targets["within_2"]
                         + targets["within_3"],
@@ -184,7 +217,9 @@ class RetracementFollowAnalyzer:
                             )
                             / total
                             * 100
-                        ),
+                        )
+                        if total > 0
+                        else 0,
                     }
                 )
 
@@ -192,21 +227,22 @@ class RetracementFollowAnalyzer:
 
 
 def print_comparative_table(all_results):
-    """Print a comparative table of all results"""
+    """Print a comparative table of all results including gap statistics and timeframe"""
     print("\n=== Comparative Analysis ===")
     print(
-        "┌──────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐"
+        "┌──────┬────┬────┬───────┬────────────────┬────────────────┬────────────────┬────────────────┬────────────────┬─────────────────┬─────────────────┐"
     )
     print(
-        "│ Inst │ Pat│ Total │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │"
+        "│ Inst │ TF │ Pat│ Total │     Gaps       │  Same Candle   │   Within 2     │   Within 3     │     Never      │    Cum 2 bars   │    Cum 3 bars   │"
     )
     print(
-        "├──────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤"
+        "├──────┼────┼────┼───────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼─────────────────┼─────────────────┤"
     )
 
     for row in all_results:
         print(
-            f"│ {row['instrument']:<4} │ {row['pattern']:<2} │ {row['total']:>5} │ "
+            f"│ {row['instrument']:<4} │ {row['timeframe']:<2} │ {row['pattern']:<2} │ {row['total']:>5} │ "
+            f"{row['gaps']:>5} {row['gaps_pct']:>6.1f}% │ "
             f"{row['same_count']:>5} {row['same_pct']:>6.1f}% │ "
             f"{row['two_count']:>5} {row['two_pct']:>6.1f}% │ "
             f"{row['three_count']:>5} {row['three_pct']:>6.1f}% │ "
@@ -216,7 +252,7 @@ def print_comparative_table(all_results):
         )
 
     print(
-        "└──────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘"
+        "└──────┴────┴────┴───────┴────────────────┴────────────────┴────────────────┴────────────────┴────────────────┴─────────────────┴─────────────────┘"
     )
 
 
@@ -232,29 +268,84 @@ def analyze_instrument(filepath: str, instrument: str):
     analyzer.print_analysis(results, instrument)
 
 
+def save_to_csv(all_timeframe_results):
+    """Save all results to a CSV file"""
+    output_data = []
+
+    for timeframe, results in all_timeframe_results.items():
+        for row in results:
+            output_data.append(
+                {
+                    "timeframe": timeframe,
+                    "instrument": row["instrument"],
+                    "pattern": row["pattern"],
+                    "total_patterns": row["total"],
+                    "same_candle_count": row["same_count"],
+                    "same_candle_pct": row["same_pct"],
+                    "within_2_count": row["two_count"],
+                    "within_2_pct": row["two_pct"],
+                    "within_3_count": row["three_count"],
+                    "within_3_pct": row["three_pct"],
+                    "never_count": row["never_count"],
+                    "never_pct": row["never_pct"],
+                    "cum_2bars_count": row["cum_two_count"],
+                    "cum_2bars_pct": row["cum_two_pct"],
+                    "cum_3bars_count": row["cum_three_count"],
+                    "cum_3bars_pct": row["cum_three_pct"],
+                }
+            )
+
+    df = pd.DataFrame(output_data)
+    df.to_csv("retracement_analysis_results.csv", index=False)
+    print("\nResults saved to retracement_analysis_results.csv")
+
+
 def main():
-    # Analyze both MNQ and MES
+    timeframes = {
+        "12H": "12h",
+        "4H": "4h",
+        "60min": "60min",
+        "30min": "30min",
+        "15min": "15min",
+    }
+
     instruments = {
         "MNQ": "../../data/MNQ/continuous_MNQ_volume_rolled.csv",
         "MES": "../../data/MES/continuous_MES_volume_rolled.csv",
     }
 
-    all_results = []
+    # Store all results for CSV export
+    all_timeframe_results = {}
 
-    for instrument, filepath in instruments.items():
-        try:
-            analyzer = RetracementFollowAnalyzer()
-            if analyzer.prepare_data(filepath):
-                results = analyzer.analyze_follow_through()
-                all_results.extend(analyzer.print_analysis(results, instrument))
-        except Exception as e:
-            print(f"Error analyzing {instrument}: {str(e)}")
-            import traceback
+    # Analyze each instrument and timeframe combination
+    for timeframe_name, timeframe in timeframes.items():
+        print(f"\n\n=== Analysis for {timeframe_name} Timeframe ===")
+        all_results = []
 
-            print(traceback.format_exc())
+        for instrument, filepath in instruments.items():
+            try:
+                analyzer = RetracementFollowAnalyzer()
+                if analyzer.prepare_data(filepath, timeframe):
+                    results = analyzer.analyze_follow_through()
+                    result_data = analyzer.print_analysis(
+                        results, instrument, timeframe_name
+                    )
+                    all_results.extend(result_data)
+            except Exception as e:
+                print(f"Error analyzing {instrument}: {str(e)}")
+                import traceback
 
-    # Print comparative table of all results
-    print_comparative_table(all_results)
+                print(traceback.format_exc())
+
+        if all_results:  # Only print if we have results
+            # Print comparative table for this timeframe
+            print_comparative_table(all_results)
+
+        # Store results for this timeframe
+        all_timeframe_results[timeframe_name] = all_results
+
+    # Save all results to CSV
+    save_to_csv(all_timeframe_results)
 
 
 if __name__ == "__main__":
