@@ -1,3 +1,3 @@
 # Quantitative Futures Analytics (Python)
 
-Repository of statisical analysis of US Index futures data
+Repository of statistical analysis of US Index futures data
