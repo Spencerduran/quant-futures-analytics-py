@@ -5,6 +5,21 @@ This script analyzes SSS50 retrace patterns in futures market data, specifically
 - **2U Pattern**: When a candle makes a higher high than the previous candle
 - **2D Pattern**: When a candle makes a lower low than the previous candle
 
+## Methodology
+
+The analysis considers a pattern successful if:
+
+- For 2U: Price reaches the previous candle's low
+- For 2D: Price reaches the previous candle's high
+
+Success is measured across three timeframes:
+
+1. Within the same candle
+2. Within the next 2 candles
+3. Within the next 3 candles
+
+Only patterns with 50%+ retracement are included in the analysis to ensure statistical relevance.
+
 ## Features
 
 - Analyzes multiple timeframes (15min, 30min, 60min, 4H, 12H)
@@ -31,21 +46,6 @@ The script generates three types of output:
    - Cumulative success rates
 
 2. **CSV Export**: Creates a comprehensive CSV file containing all analysis results
-
-## Methodology
-
-The analysis considers a pattern successful if:
-
-- For 2U: Price reaches the previous candle's low
-- For 2D: Price reaches the previous candle's high
-
-Success is measured across three timeframes:
-
-1. Within the same candle
-2. Within the next 2 candles
-3. Within the next 3 candles
-
-Only patterns with 50%+ retracement are included in the analysis to ensure statistical relevance.
 
 ```
 === Analysis for 12H Timeframe ===
